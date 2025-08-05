@@ -1,0 +1,43 @@
+<!-- src/main/resources/templates/layouts/admin.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Admin Panel'">Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+     <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981',
+                        accent: '#8b5cf6',
+                        dark: '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div th:replace="~{fragments/admin-header :: admin-header}"></div>
+    
+    <div class="flex">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        
+        <main class="flex-1 p-6">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-800" th:text="${pageTitle}">Page Title</h1>
+                <p class="text-gray-600" th:text="${pageDescription}">Page description</p>
+            </div>
+            
+            <div layout:fragment="content">
+                <!-- Content will be inserted here -->
+            </div>
+        </main>
+    </div>
+</body>
+</html>

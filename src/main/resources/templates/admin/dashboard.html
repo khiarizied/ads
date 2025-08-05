@@ -1,0 +1,87 @@
+<!-- src/main/resources/templates/admin/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/admin}">
+<head>
+    <title>Dashboard - Admin Panel</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Total Users</p>
+                        <p class="text-2xl font-bold" th:text="${userCount}">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-user-shield text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Admin Users</p>
+                        <p class="text-2xl font-bold" th:text="${adminCount}">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-home text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Properties</p>
+                        <p class="text-2xl font-bold">24</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+            <div class="space-y-4">
+                <div class="flex items-center border-b pb-4">
+                    <div class="p-2 rounded-full bg-indigo-100 text-indigo-600 mr-4">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">New user registered</p>
+                        <p class="text-gray-600 text-sm">John Doe registered as a new user</p>
+                    </div>
+                    <div class="ml-auto text-gray-500 text-sm">2 hours ago</div>
+                </div>
+                
+                <div class="flex items-center border-b pb-4">
+                    <div class="p-2 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">New property added</p>
+                        <p class="text-gray-600 text-sm">Luxury apartment added to listings</p>
+                    </div>
+                    <div class="ml-auto text-gray-500 text-sm">1 day ago</div>
+                </div>
+                
+                <div class="flex items-center">
+                    <div class="p-2 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">User profile updated</p>
+                        <p class="text-gray-600 text-sm">Admin profile information updated</p>
+                    </div>
+                    <div class="ml-auto text-gray-500 text-sm">2 days ago</div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</body>
+</html>
