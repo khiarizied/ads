@@ -78,8 +78,8 @@ public class PropertyController {
         try {
             User currentUser = userService.findByUsername(authentication.getName());
             propertyDto.setPhotos(photoFiles);
-            propertyService.save(propertyDto, currentUser);
-            return "redirect:/properties/my-properties?success";
+            Property savedProperty = propertyService.save(propertyDto, currentUser);
+            return "redirect:/properties/view/" + savedProperty.getId() + "?created";
         } catch (IOException e) {
             model.addAttribute("uploadError", "Error uploading photos: " + e.getMessage());
             model.addAttribute("propertyTypes", PropertyType.values());
@@ -138,7 +138,16 @@ public class PropertyController {
 
                 propertyDto.setPhotos(photoFiles);
                 propertyService.update(id, propertyDto);
-                return "redirect:/properties/my-properties?updated";
+
+                // Check if photos were actually uploaded
+                boolean hasNewPhotos = photoFiles != null && !photoFiles.isEmpty() && 
+                                     photoFiles.stream().anyMatch(file -> !file.isEmpty());
+
+                if (hasNewPhotos) {
+                    return "redirect:/properties/edit/" + id + "?photosAdded";
+                } else {
+                    return "redirect:/properties/edit/" + id + "?updated";
+                }
             }
         } catch (IOException e) {
             model.addAttribute("uploadError", "Error uploading photos: " + e.getMessage());

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main}">
+<head>
+    <title th:text="${property.title + ' - Real Estate App'}">Property Details - Real Estate App</title>
+    <style>
+        .property-gallery {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            height: 400px;
+        }
+        .main-photo {
+            grid-row: 1 / 3;
+            grid-column: 1 / 2;
+        }
+        .secondary-photo {
+            position: relative;
+            overflow: hidden;
+        }
+        .photo-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .secondary-photo:hover .photo-overlay {
+            opacity: 1;
+        }
+        .property-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .property-image:hover {
+            transform: scale(1.02);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        .modal-content {
+            display: block;
+            margin: auto;
+            max-width: 90%;
+            max-height: 90%;
+            margin-top: 2%;
+        }
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+        }
+        .nav-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .prev {
+            left: 40px;
+        }
+        .next {
+            right: 40px;
+        }
+    </style>
+</head>
+<body>
+    <section layout:fragment="content">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Success Message -->
+            <div th:if="${param.created}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span>Property created successfully! Your listing is now live with all uploaded photos.</span>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 mb-2" th:text="${property.title}">Property Title</h1>
+                        <p class="text-gray-600 text-lg mb-4" th:text="${property.address + ', ' + property.city}">Address</p>
+                        <div class="flex items-center space-x-4">
+                            <span th:text="${property.status.displayName}" 
+                                  class="px-3 py-1 text-sm font-semibold rounded-full"
+                                  th:classappend="${property.status.name() == 'FOR_SALE' ? 'bg-green-100 text-green-800' : 
+                                                   property.status.name() == 'FOR_RENT' ? 'bg-blue-100 text-blue-800' : 
+                                                   property.status.name() == 'SOLD' ? 'bg-gray-100 text-gray-800' : 
+                                                   'bg-yellow-100 text-yellow-800'}">Status</span>
+                            <span th:text="${property.type.displayName}" 
+                                  class="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 rounded-full">Type</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-3xl font-bold text-indigo-600 mb-2" th:text="'$' + ${#numbers.formatDecimal(property.price, 0, 'COMMA', 0, 'POINT')}">Price</p>
+                        <div class="flex space-x-2" sec:authorize="isAuthenticated()">
+                            <div th:if="${#authentication.name == property.owner.username}">
+                                <a th:href="@{/properties/edit/{id}(id=${property.id})}" 
+                                   class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-200">
+                                    <i class="fas fa-edit mr-1"></i>Edit Property
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo Gallery -->
+            <div th:if="${property.photos != null and !property.photos.isEmpty()}" class="mb-8">
+                <div class="property-gallery">
+                    <!-- Main Photo -->
+                    <div class="main-photo" th:if="${property.mainPhoto != null}">
+                        <img th:src="@{/properties/photo/{photoId}(photoId=${property.mainPhoto.id})}"
+                             th:alt="${property.title}"
+                             class="property-image"
+                             onclick="openModal(0)">
+                    </div>
+
+                    <!-- Secondary Photos -->
+                    <div th:each="photo, iterStat : ${property.photos}" 
+                         th:if="${!photo.mainPhoto and iterStat.index < 4}" 
+                         class="secondary-photo">
+                        <img th:src="@{/properties/photo/{photoId}(photoId=${photo.id})}"
+                             th:alt="'Property photo ' + ${iterStat.index + 1}"
+                             class="property-image"
+                             th:onclick="'openModal(' + ${iterStat.index + 1} + ')'">
+                        <div th:if="${property.photos.size() > 4 and iterStat.index == 3}" class="photo-overlay">
+                            <span th:text="'+' + ${property.photos.size() - 4} + ' more'">+X more</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Main Content -->
+                <div class="lg:col-span-2">
+                    <!-- Description -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Description</h2>
+                        <p class="text-gray-700 leading-relaxed" th:text="${property.description}">Property description</p>
+                    </div>
+
+                    <!-- Property Features -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Property Features</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div th:if="${property.bedrooms != null}" class="text-center p-4 bg-gray-50 rounded-lg">
+                                <i class="fas fa-bed text-2xl text-indigo-600 mb-2"></i>
+                                <p class="text-lg font-semibold text-gray-900" th:text="${property.bedrooms}">0</p>
+                                <p class="text-sm text-gray-600">Bedrooms</p>
+                            </div>
+                            <div th:if="${property.bathrooms != null}" class="text-center p-4 bg-gray-50 rounded-lg">
+                                <i class="fas fa-bath text-2xl text-indigo-600 mb-2"></i>
+                                <p class="text-lg font-semibold text-gray-900" th:text="${property.bathrooms}">0</p>
+                                <p class="text-sm text-gray-600">Bathrooms</p>
+                            </div>
+                            <div th:if="${property.area != null}" class="text-center p-4 bg-gray-50 rounded-lg">
+                                <i class="fas fa-ruler-combined text-2xl text-indigo-600 mb-2"></i>
+                                <p class="text-lg font-semibold text-gray-900" th:text="${property.area}">0</p>
+                                <p class="text-sm text-gray-600">m² Area</p>
+                            </div>
+                            <div th:if="${property.yearBuilt != null}" class="text-center p-4 bg-gray-50 rounded-lg">
+                                <i class="fas fa-calendar text-2xl text-indigo-600 mb-2"></i>
+                                <p class="text-lg font-semibold text-gray-900" th:text="${property.yearBuilt}">0</p>
+                                <p class="text-sm text-gray-600">Year Built</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <!-- Contact Information -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact Owner</h2>
+                        <div class="flex items-center mb-4">
+                            <img th:if="${property.owner.hasPhoto()}" 
+                                 th:src="@{/photos/users/{username}(username=${property.owner.username})}"
+                                 th:alt="${property.owner.username}"
+                                 class="w-12 h-12 rounded-full object-cover mr-3">
+                            <div th:unless="${property.owner.hasPhoto()}" 
+                                 class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900" th:text="${property.owner.username}">Owner Name</p>
+                                <p class="text-sm text-gray-600">Property Owner</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <button class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md font-medium hover:bg-indigo-700">
+                                <i class="fas fa-phone mr-2"></i>Call Now
+                            </button>
+                            <button class="w-full bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700">
+                                <i class="fas fa-envelope mr-2"></i>Send Message
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Location</h2>
+                        <div class="space-y-2">
+                            <p class="flex items-center text-gray-700">
+                                <i class="fas fa-map-marker-alt text-indigo-600 mr-2"></i>
+                                <span th:text="${property.address}">Address</span>
+                            </p>
+                            <p class="flex items-center text-gray-700">
+                                <i class="fas fa-city text-indigo-600 mr-2"></i>
+                                <span th:text="${property.city}">City</span>
+                            </p>
+                            <p th:if="${property.state}" class="flex items-center text-gray-700">
+                                <i class="fas fa-flag text-indigo-600 mr-2"></i>
+                                <span th:text="${property.state}">State</span>
+                            </p>
+                            <p th:if="${property.zipCode}" class="flex items-center text-gray-700">
+                                <i class="fas fa-mail-bulk text-indigo-600 mr-2"></i>
+                                <span th:text="${property.zipCode}">ZIP Code</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-8 text-center">
+                <a href="/properties/my-properties" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to My Properties
+                </a>
+            </div>
+        </div>
+
+        <!-- Photo Modal -->
+        <div id="photoModal" class="modal">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="nav-btn prev" onclick="changePhoto(-1)">&#10094;</span>
+            <span class="nav-btn next" onclick="changePhoto(1)">&#10095;</span>
+            <img class="modal-content" id="modalImg">
+        </div>
+    </section>
+
+    <script>
+        let currentPhotoIndex = 0;
+        const photos = [];
+
+        // Initialize photos array
+        document.addEventListener('DOMContentLoaded', function() {
+            const photoElements = document.querySelectorAll('.property-image');
+            photoElements.forEach((img, index) => {
+                photos.push(img.src);
+            });
+        });
+
+        function openModal(photoIndex) {
+            currentPhotoIndex = photoIndex;
+            const modal = document.getElementById('photoModal');
+            const modalImg = document.getElementById('modalImg');
+            modal.style.display = 'block';
+            modalImg.src = photos[photoIndex];
+        }
+
+        function closeModal() {
+            document.getElementById('photoModal').style.display = 'none';
+        }
+
+        function changePhoto(direction) {
+            currentPhotoIndex += direction;
+            if (currentPhotoIndex >= photos.length) {
+                currentPhotoIndex = 0;
+            } else if (currentPhotoIndex < 0) {
+                currentPhotoIndex = photos.length - 1;
+            }
+            document.getElementById('modalImg').src = photos[currentPhotoIndex];
+        }
+
+        // Close modal when clicking outside the image
+        window.onclick = function(event) {
+            const modal = document.getElementById('photoModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            const modal = document.getElementById('photoModal');
+            if (modal.style.display === 'block') {
+                if (event.key === 'Escape') {
+                    closeModal();
+                } else if (event.key === 'ArrowLeft') {
+                    changePhoto(-1);
+                } else if (event.key === 'ArrowRight') {
+                    changePhoto(1);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
