@@ -1,0 +1,189 @@
+<!-- Custom Confirmation Dialog -->
+<div id="confirmationModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+        <!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i id="confirmationIcon" class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="confirmationTitle">
+                            Confirm Action
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500" id="confirmationMessage">
+                                Are you sure you want to proceed with this action?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirmButton" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200">
+                    <i id="confirmButtonIcon" class="fas fa-trash mr-2"></i>
+                    <span id="confirmButtonText">Delete</span>
+                </button>
+                <button type="button" id="cancelButton" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Custom Confirmation Dialog System
+    class ConfirmationDialog {
+        constructor() {
+            this.modal = document.getElementById('confirmationModal');
+            this.title = document.getElementById('confirmationTitle');
+            this.message = document.getElementById('confirmationMessage');
+            this.icon = document.getElementById('confirmationIcon');
+            this.confirmButton = document.getElementById('confirmButton');
+            this.cancelButton = document.getElementById('cancelButton');
+            this.confirmButtonText = document.getElementById('confirmButtonText');
+            this.confirmButtonIcon = document.getElementById('confirmButtonIcon');
+            this.currentCallback = null;
+
+            this.setupEventListeners();
+        }
+
+        setupEventListeners() {
+            // Close modal when clicking outside
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) {
+                    this.hide();
+                }
+            });
+
+            // Cancel button
+            this.cancelButton.addEventListener('click', () => {
+                this.hide();
+            });
+
+            // Confirm button
+            this.confirmButton.addEventListener('click', () => {
+                if (this.currentCallback) {
+                    this.currentCallback();
+                }
+                this.hide();
+            });
+
+            // ESC key to close
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !this.modal.classList.contains('hidden')) {
+                    this.hide();
+                }
+            });
+        }
+
+        show(options = {}) {
+            // Set content
+            this.title.textContent = options.title || 'Confirm Action';
+            this.message.textContent = options.message || 'Are you sure you want to proceed?';
+            this.confirmButtonText.textContent = options.confirmText || 'Confirm';
+
+            // Set icon
+            this.icon.className = `fas ${options.icon || 'fa-exclamation-triangle'} text-red-600`;
+            this.confirmButtonIcon.className = `fas ${options.confirmIcon || 'fa-check'} mr-2`;
+
+            // Set button color based on type
+            const buttonClass = options.type === 'danger' 
+                ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                : options.type === 'warning'
+                ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
+                : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500';
+
+            this.confirmButton.className = this.confirmButton.className.replace(
+                /bg-\w+-\d+\s+hover:bg-\w+-\d+\s+focus:ring-\w+-\d+/g, 
+                buttonClass
+            );
+
+            // Store callback
+            this.currentCallback = options.onConfirm;
+
+            // Show modal with animation
+            this.modal.classList.remove('hidden');
+            setTimeout(() => {
+                this.modal.querySelector('.bg-gray-500').classList.add('opacity-75');
+                this.modal.querySelector('.inline-block').classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+            }, 10);
+        }
+
+        hide() {
+            // Hide with animation
+            this.modal.querySelector('.bg-gray-500').classList.remove('opacity-75');
+            this.modal.querySelector('.inline-block').classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+
+            setTimeout(() => {
+                this.modal.classList.add('hidden');
+                this.currentCallback = null;
+            }, 300);
+        }
+    }
+
+    // Initialize dialog
+    let confirmDialog;
+    document.addEventListener('DOMContentLoaded', function() {
+        confirmDialog = new ConfirmationDialog();
+    });
+
+    // Global confirmation functions
+    function confirmDelete(message, onConfirm, title = 'Delete Confirmation') {
+        confirmDialog.show({
+            title: title,
+            message: message,
+            confirmText: 'Delete',
+            confirmIcon: 'fa-trash',
+            icon: 'fa-exclamation-triangle',
+            type: 'danger',
+            onConfirm: onConfirm
+        });
+        return false; // Prevent default form submission
+    }
+
+    function confirmAction(message, onConfirm, options = {}) {
+        confirmDialog.show({
+            title: options.title || 'Confirm Action',
+            message: message,
+            confirmText: options.confirmText || 'Confirm',
+            confirmIcon: options.confirmIcon || 'fa-check',
+            icon: options.icon || 'fa-question-circle',
+            type: options.type || 'primary',
+            onConfirm: onConfirm
+        });
+        return false; // Prevent default form submission
+    }
+</script>
+
+<style>
+    /* Animation classes for smooth transitions */
+    #confirmationModal .inline-block {
+        opacity: 0;
+        transform: translateY(4px) scale(0.95);
+        transition: all 0.3s ease-out;
+    }
+
+    #confirmationModal .bg-gray-500 {
+        opacity: 0;
+        transition: opacity 0.3s ease-out;
+    }
+
+    /* Ensure smooth animations */
+    #confirmationModal .inline-block.opacity-100 {
+        opacity: 1;
+    }
+
+    #confirmationModal .inline-block.translate-y-0 {
+        transform: translateY(0);
+    }
+
+    #confirmationModal .inline-block.sm\:scale-100 {
+        transform: scale(1);
+    }
+</style>

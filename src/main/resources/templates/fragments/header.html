@@ -21,20 +21,29 @@
                 </div>
                 <div class="flex items-center">
                     <div sec:authorize="isAuthenticated()">
-                        <div class="flex items-center ml-4">
+                        <div class="flex items-center ml-4 space-x-4">
+                            <!-- Logout Button -->
+                            <a href="/properties/my-properties" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
+                                <i class="fas fa-building mr-2"></i>My Properties
+                            </a>
+                            <form th:action="@{/logout}" method="post" class="inline">
+                                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors duration-200">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
                             <div class="relative">
                                 <button id="user-menu-button" class="flex items-center text-sm rounded-full focus:outline-none">
                                     <img class="h-8 w-8 rounded-full object-cover" 
                                          th:src="@{/photos/users/{username}(username=${#authentication.name})}"
                                          th:alt="${#authentication.name}"
-                                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzNjM2MzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDEyYzIuNzYxIDAgNS0yLjIzOSA1LTVzLTIuMjM5LTUtNS01LTUgMi4yMzktNSA1IDIuMjM5IDUgNSA1em0wIDJjLTIuNjcgMC04IDEuMzQtOCA0djJoMjB2LTJjMC0yLjY2LTMuMTMtNC04LTR6Ii8+PC9zdmc+'">
+                                         onerror="this.src=&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzNjM2MzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDEyYzIuNzYxIDAgNS0yLjIzOSA1LTVzLTIuMjM5LTUtNS01LTUgMi4yMzktNSA1IDIuMjM5IDUgNSA1em0wIDJjLTIuNjcgMC04IDEuMzQtOCA0djJoMjB2LTJjMC0yLjY2LTMuMTMtNC04LTR6Ii8+PC9zdmc+&quot;">
                                 </button>
                                 <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                                     <div class="px-4 py-2 border-b">
                                         <p class="text-sm font-medium text-gray-900" 
                                            th:text="${#authentication.name}">Username</p>
                                         <p class="text-xs text-gray-500 truncate" 
-                                           th:text="${#authentication.principal.authorities.toString().replace('[ROLE_', '').replace(']', '')}">Role</p>
+                                           th:text="${#authentication.principal.authorities.?[true].![authority].![replace('ROLE_', '')].toString().replace('[', '').replace(']', '')}">Role</p>
                                     </div>
                                     <a href="/admin/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
