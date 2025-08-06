@@ -39,5 +39,355 @@
 
     <!-- Include Confirmation Dialog -->
     <div th:replace="~{fragments/confirmation-dialog}"></div>
+    
+     <script>
+        // Array to store the selected File objects
+        let selectedFiles = [];
+
+        /**
+         * Handles file selection via the file input dialog.
+         * Filters for image files, enforces the 10-file limit,
+         * and triggers preview generation.
+         */
+        function handlePhotoUpload(event) {
+            const files = Array.from(event.target.files);
+            // --- FIX 1: Filter for image files only (like drag/drop does) ---
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            if (imageFiles.length !== files.length) {
+                 // Optional: Alert user if non-images were selected
+                 console.warn("Some selected files were not images and were ignored.");
+                 // alert("Please select only image files (JPG, PNG, GIF).");
+            }
+            // Limit to 10 photos
+            const totalFiles = selectedFiles.length + imageFiles.length;
+          
+            if (totalFiles > 10) {
+                alert(`You can only add ${10 - selectedFiles.length} more photo(s).`);
+                // Add only enough files to reach the limit
+                const slotsAvailable = 10 - selectedFiles.length;
+                selectedFiles.push(...imageFiles.slice(0, slotsAvailable));
+            } else {
+                selectedFiles.push(...imageFiles); // Use imageFiles instead of files
+            }
+           
+            displayPhotoPreview(); // Update previews
+        }
+
+        /**
+         * Generates thumbnail previews for the selected files.
+         * Creates image elements and delete buttons.
+         */
+        function displayPhotoPreview() {
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = ''; // Clear existing previews
+
+            if (selectedFiles.length === 0) {
+                // If no files, ensure the file input is also cleared and return
+                updateFileInput();
+                return;
+            }
+
+            // Process each selected file
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    // Create container div for the preview
+                    const photoDiv = document.createElement('div');
+                    photoDiv.className = 'photo-preview';
+
+                    // Create the image element
+                    const img = document.createElement('img');
+                    img.src = e.target.result; // Set image source to data URL
+                    img.alt = `Preview ${index + 1}`;
+
+                    // Create the remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-btn';
+                    // --- FIX 2: Use direct assignment for onclick, passing the index ---
+                    removeBtn.onclick = function() {
+                        removePhoto(index); // Call remove function with correct index
+                    };
+
+                    // --- FIX 3: Create remove icon using text (more robust) ---
+                    const icon = document.createElement('span');
+                    icon.innerHTML = '&times;'; // HTML entity for multiplication sign (×)
+                    // Optional styling for the icon
+                    // icon.style.fontSize = '16px';
+                    // icon.style.fontWeight = 'bold';
+
+                    // Assemble the elements
+                    removeBtn.appendChild(icon);
+                    photoDiv.appendChild(img);
+                    photoDiv.appendChild(removeBtn);
+
+                    // Add the preview to the container
+                    
+                    preview.appendChild(photoDiv);
+                    
+                };
+
+                reader.onerror = function() {
+                    console.error(`Error reading file: ${file.name}`);
+                };
+
+                // Start reading the file as a Data URL
+                reader.readAsDataURL(file);
+            });
+
+            // --- FIX 4: Ensure file input is updated AFTER previews are handled ---
+            // Update the hidden file input to match the selectedFiles array
+            updateFileInput();
+        }
+
+
+        /**
+         * Removes a photo from the selectedFiles array and updates previews.
+         * @param {number} index - The index of the file to remove in selectedFiles.
+         */
+        function removePhoto(index) {
+            // Remove the file from the array at the specified index
+            if (index >= 0 && index < selectedFiles.length) {
+                selectedFiles.splice(index, 1);
+                // Update the preview display (this recreates elements with correct indices)
+                displayPhotoPreview();
+                // Update the file input to reflect the changes
+                updateFileInput();
+            } else {
+                console.warn(`Attempted to remove photo at invalid index: ${index}`);
+            }
+        }
+
+        /**
+         * Updates the hidden file input element to match the current selectedFiles array.
+         * This is crucial for form submission to include the correct files.
+         */
+        function updateFileInput() {
+            const input = document.getElementById('photoFiles');
+            const dt = new DataTransfer(); // Create a new DataTransfer object
+            // Add each selected file to the DataTransfer object
+            selectedFiles.forEach(file => {
+                dt.items.add(file);
+            });
+            // Assign the files from DataTransfer to the input
+            input.files = dt.files;
+        }
+
+        // --- Drag and Drop Functionality ---
+        const uploadArea = document.getElementById('photoUploadArea');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Prevent default browser behavior
+            uploadArea.style.borderColor = '#6366f1'; // Change border on drag over
+            uploadArea.style.backgroundColor = '#f8fafc'; // Change background
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#d1d5db'; // Revert border
+            uploadArea.style.backgroundColor = ''; // Revert background
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault(); // Prevent default browser behavior (opening file)
+            uploadArea.style.borderColor = '#d1d5db'; // Revert border
+            uploadArea.style.backgroundColor = ''; // Revert background
+
+            // Get files from the drop event and filter for images
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            if (files.length === 0) {
+                 alert("Please drop image files only.");
+                 return;
+            }
+
+            // Limit to 10 photos
+            const totalFiles = selectedFiles.length + files.length;
+            if (totalFiles > 10) {
+                alert(`Adding these files would exceed the 10-photo limit. Please remove some files or add fewer.`);
+                // Add only enough files to reach the limit
+                const slotsAvailable = 10 - selectedFiles.length;
+                selectedFiles.push(...files.slice(0, slotsAvailable));
+            } else {
+                selectedFiles.push(...files);
+            }
+
+            // Update previews and file input
+            displayPhotoPreview();
+            // Note: updateFileInput is called inside displayPhotoPreview
+        });
+
+        // Optional: Click on upload area to trigger file selection
+        uploadArea.addEventListener('click', (e) => {
+            // Check if the click target is the area itself or specific child elements
+            // This prevents clicks on buttons/inputs inside from re-triggering file dialog
+            if (e.target === uploadArea || e.target.tagName === 'P' || e.target.tagName === 'I') {
+                document.getElementById('photoFiles').click();
+            }
+        });
+        
+        
+        
+        /******************************************************************************************/
+        
+         let newSelectedFiles = [];
+
+        function previewMultiplePhotos(event) {
+            const files = Array.from(event.target.files);
+            // Filter for image files only
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            newSelectedFiles = [...newSelectedFiles, ...imageFiles].slice(0, 10); // Limit to 10 new photos
+            displayNewPhotoPreview();
+        }
+
+        function displayNewPhotoPreview() {
+            const preview = document.getElementById('newPhotoPreview');
+            preview.innerHTML = '';
+
+            if (newSelectedFiles.length === 0) {
+                return;
+            }
+
+            // Process each file individually
+            newSelectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    // Create photo container
+                    const photoDiv = document.createElement('div');
+                    photoDiv.className = 'photo-preview';
+
+                    // Create image element
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = `New photo preview ${index + 1}`;
+
+                    // Create remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.onclick = function() {
+                        removeNewPhoto(index);
+                    };
+
+                    // Create close icon (using text since FontAwesome might not be available)
+                    const icon = document.createElement('span');
+                    icon.innerHTML = '×';
+                    icon.style.fontSize = '14px';
+                    icon.style.fontWeight = 'bold';
+
+                    // Assemble elements
+                    removeBtn.appendChild(icon);
+                    photoDiv.appendChild(img);
+                    photoDiv.appendChild(removeBtn);
+                    preview.appendChild(photoDiv);
+                };
+
+                reader.onerror = function() {
+                    console.error(`Error reading file: ${file.name}`);
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            // Update file input
+            updateNewFileInput();
+        }
+
+        function removeNewPhoto(index) {
+            // Remove the file from the array
+            newSelectedFiles.splice(index, 1);
+
+            // Update the preview display
+            displayNewPhotoPreview();
+        }
+
+        function updateNewFileInput() {
+            const input = document.getElementById('photoFiles');
+            
+            // Create a new DataTransfer object to update the file input
+            const dt = new DataTransfer();
+            newSelectedFiles.forEach(file => {
+                dt.items.add(file);
+            });
+            
+            input.files = dt.files;
+        }
+
+        function confirmDeletePhoto(button) {
+            if (confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
+                button.closest('form').submit();
+            }
+        }
+
+        // Drag and drop functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('photoUploadArea');
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Highlight drop area when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                uploadArea.style.borderColor = '#6366f1';
+                uploadArea.style.backgroundColor = '#f8fafc';
+            }
+
+            function unhighlight(e) {
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.backgroundColor = '';
+            }
+
+            // Handle dropped files
+            uploadArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = Array.from(dt.files);
+
+                // Filter for image files only
+                const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+                if (imageFiles.length > 0) {
+                    newSelectedFiles = [...newSelectedFiles, ...imageFiles].slice(0, 10);
+                    
+                    // Update the file input to reflect dropped files
+                    const input = document.getElementById('photoFiles');
+                    const dataTransfer = new DataTransfer();
+                    newSelectedFiles.forEach(file => {
+                        dataTransfer.items.add(file);
+                    });
+                    input.files = dataTransfer.files;
+                    
+                    displayNewPhotoPreview();
+                }
+            }
+
+            // Click on upload area to trigger file selection
+            uploadArea.addEventListener('click', (e) => {
+                if (e.target === uploadArea || e.target.tagName === 'P' || e.target.tagName === 'I') {
+                    document.getElementById('photoFiles').click();
+                }
+            });
+        });
+        
+      /***********************************************************************************************/
+    </script>
 </body>
 </html>

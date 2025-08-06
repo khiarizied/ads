@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,7 @@ public class PropertyController {
     @Autowired
     private UserService userService;
 
+    
     // User property dashboard
     @GetMapping("/my-properties")
     public String myProperties(Authentication authentication, Model model,
@@ -115,9 +117,11 @@ public class PropertyController {
     public String updateProperty(@PathVariable Long id,
                                 @Valid @ModelAttribute("property") PropertyDto propertyDto,
                                 BindingResult result,
-                                @RequestParam("photoFiles") List<MultipartFile> photoFiles,
+                                @RequestParam(value = "photoFiles", required = false) List<MultipartFile> photoFiles,
                                 Authentication authentication,
                                 Model model) {
+    	
+    	System.out.println("mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmsssssssssssssssss");
         if (result.hasErrors()) {
             Optional<Property> property = propertyService.findById(id);
             model.addAttribute("propertyEntity", property.orElse(null));
@@ -136,11 +140,16 @@ public class PropertyController {
                     return "redirect:/properties/my-properties?error=unauthorized";
                 }
 
+                // Handle case when no photos are uploaded
+                if (photoFiles == null) {
+                    photoFiles = new ArrayList<>();
+                }
+
                 propertyDto.setPhotos(photoFiles);
                 propertyService.update(id, propertyDto);
 
                 // Check if photos were actually uploaded
-                boolean hasNewPhotos = photoFiles != null && !photoFiles.isEmpty() && 
+                boolean hasNewPhotos = !photoFiles.isEmpty() && 
                                      photoFiles.stream().anyMatch(file -> !file.isEmpty());
 
                 if (hasNewPhotos) {

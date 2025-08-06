@@ -16,22 +16,22 @@
             background-color: #f8fafc;
         }
         .photo-preview {
-            display: inline-block;
-            margin: 0.5rem;
             position: relative;
-        }
-        .photo-preview img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
+            overflow: hidden;
             border-radius: 8px;
             border: 2px solid #e5e7eb;
+            aspect-ratio: 1 / 1; /* Maintains square aspect ratio */
+        }
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures image covers the area without distortion */
         }
         .photo-preview .remove-btn {
             position: absolute;
             top: -5px;
             right: -5px;
-            background: #ef4444;
+            background: #ef4444; /* Red background */
             color: white;
             border-radius: 50%;
             width: 24px;
@@ -41,6 +41,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            /* Ensure the button itself doesn't interfere with image clicks */
+            z-index: 10; 
+        }
+        /* Optional: Style the '×' icon if needed */
+        .photo-preview .remove-btn span {
+             /* Adjust size/style as needed */
+             font-size: 16px;
+             font-weight: bold;
+             line-height: 1; /* Helps center the '×' */
         }
     </style>
 </head>
@@ -52,15 +61,12 @@
                 <h1 class="text-3xl font-bold text-gray-900">Add New Property</h1>
                 <p class="text-gray-600 mt-2">Create a new property listing</p>
             </div>
-
             <!-- Error Messages -->
             <div th:if="${uploadError}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
                 <span th:text="${uploadError}">Upload error</span>
             </div>
-
-            <form th:action="@{/properties/add}" th:object="${property}" method="post" enctype="multipart/form-data" 
+            <form th:action="@{/properties/add}" th:object="${property}" method="post" enctype="multipart/form-data"
                   class="bg-white shadow-lg rounded-lg p-6">
-
                 <!-- Basic Information -->
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
@@ -76,7 +82,6 @@
                                 <span th:errors="*{title}">Title Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
                                 Price <span class="text-red-500">*</span>
@@ -88,7 +93,6 @@
                                 <span th:errors="*{price}">Price Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="type">
                                 Property Type <span class="text-red-500">*</span>
@@ -96,15 +100,14 @@
                             <select id="type" th:field="*{type}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                                 <option value="">Select type</option>
-                                <option th:each="propertyType : ${propertyTypes}" 
-                                        th:value="${propertyType}" 
+                                <option th:each="propertyType : ${propertyTypes}"
+                                        th:value="${propertyType}"
                                         th:text="${propertyType.displayName}">Type</option>
                             </select>
                             <div th:if="${#fields.hasErrors('type')}" class="text-red-500 text-xs mt-1">
                                 <span th:errors="*{type}">Type Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="status">
                                 Status <span class="text-red-500">*</span>
@@ -112,8 +115,8 @@
                             <select id="status" th:field="*{status}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                                 <option value="">Select status</option>
-                                <option th:each="propertyStatus : ${propertyStatuses}" 
-                                        th:value="${propertyStatus}" 
+                                <option th:each="propertyStatus : ${propertyStatuses}"
+                                        th:value="${propertyStatus}"
                                         th:text="${propertyStatus.displayName}">Status</option>
                             </select>
                             <div th:if="${#fields.hasErrors('status')}" class="text-red-500 text-xs mt-1">
@@ -121,7 +124,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="mt-6">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="description">
                             Description <span class="text-red-500">*</span>
@@ -134,7 +136,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Location -->
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Location</h2>
@@ -150,7 +151,6 @@
                                 <span th:errors="*{address}">Address Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="city">
                                 City <span class="text-red-500">*</span>
@@ -162,7 +162,6 @@
                                 <span th:errors="*{city}">City Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="state">
                                 State/Province
@@ -171,7 +170,6 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                    placeholder="Enter state or province">
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="zipCode">
                                 ZIP/Postal Code
@@ -182,7 +180,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Property Details -->
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Property Details</h2>
@@ -198,7 +195,6 @@
                                 <span th:errors="*{bedrooms}">Bedrooms Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="bathrooms">
                                 Bathrooms
@@ -210,7 +206,6 @@
                                 <span th:errors="*{bathrooms}">Bathrooms Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="area">
                                 Area (m²)
@@ -222,7 +217,6 @@
                                 <span th:errors="*{area}">Area Error</span>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="yearBuilt">
                                 Year Built
@@ -236,107 +230,225 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Photos -->
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Property Photos</h2>
                     <div class="photo-upload-area" id="photoUploadArea">
-                        <i class="fas fa-camera text-4xl text-gray-400 mb-4"></i>
+                        <i class="fas fa-camera text-4xl text-gray-400 mb-4"></i> <!-- Camera icon -->
                         <p class="text-gray-600 mb-4">Click to upload photos or drag and drop</p>
-                        <input type="file" id="photoFiles" name="photoFiles" multiple accept="image/*" 
+                        <!-- Hidden file input -->
+                        <input type="file" id="photoFiles" name="photoFiles" multiple 
                                class="hidden" onchange="handlePhotoUpload(event)">
-                        <button type="button" onclick="document.getElementById('photoFiles').click()" 
+                        <!-- Button to trigger file selection -->
+                        <button type="button" onclick="document.getElementById('photoFiles').click()"
                                 class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
                             Select Photos
                         </button>
                         <p class="text-gray-500 text-sm mt-2">Maximum 10 photos. JPG, PNG, or GIF (max 5MB each)</p>
                     </div>
-                    <div id="photoPreview" class="mt-4"></div>
+                    <!-- Container for photo previews -->
+                    <div id="photoPreview" class="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
                 </div>
-
                 <!-- Submit Buttons -->
                 <div class="flex justify-between">
-                    <a href="/properties/my-properties" 
+                    <a href="/properties/my-properties"
                        class="bg-gray-300 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-400">
                         Cancel
                     </a>
-                    <button type="submit" 
+                    <button type="submit"
                             class="bg-indigo-600 text-white px-6 py-3 rounded-md font-medium hover:bg-indigo-700">
-                        <i class="fas fa-save mr-2"></i>Add Property
+                        <i class="fas fa-save mr-2"></i>Add Property <!-- Save icon -->
                     </button>
                 </div>
             </form>
         </div>
     </section>
 
+    <!-- JavaScript for Photo Handling -->
     <script>
+        // Array to store the selected File objects
         let selectedFiles = [];
 
+        /**
+         * Handles file selection via the file input dialog.
+         * Filters for image files, enforces the 10-file limit,
+         * and triggers preview generation.
+         */
         function handlePhotoUpload(event) {
             const files = Array.from(event.target.files);
-            selectedFiles = [...selectedFiles, ...files].slice(0, 10); // Limit to 10 photos
-            displayPhotoPreview();
+            // --- FIX 1: Filter for image files only (like drag/drop does) ---
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            if (imageFiles.length !== files.length) {
+                 // Optional: Alert user if non-images were selected
+                 console.warn("Some selected files were not images and were ignored.");
+                 // alert("Please select only image files (JPG, PNG, GIF).");
+            }
+            // Limit to 10 photos
+            const totalFiles = selectedFiles.length + imageFiles.length;
+            alert(totalFiles);
+            if (totalFiles > 10) {
+                alert(`You can only add ${10 - selectedFiles.length} more photo(s).`);
+                // Add only enough files to reach the limit
+                const slotsAvailable = 10 - selectedFiles.length;
+                selectedFiles.push(...imageFiles.slice(0, slotsAvailable));
+            } else {
+                selectedFiles.push(...imageFiles); // Use imageFiles instead of files
+            }
+            alert("fffffffffffffffff");
+            displayPhotoPreview(); // Update previews
         }
 
+        /**
+         * Generates thumbnail previews for the selected files.
+         * Creates image elements and delete buttons.
+         */
         function displayPhotoPreview() {
             const preview = document.getElementById('photoPreview');
-            preview.innerHTML = '';
+            preview.innerHTML = ''; // Clear existing previews
 
+            if (selectedFiles.length === 0) {
+                // If no files, ensure the file input is also cleared and return
+                updateFileInput();
+                return;
+            }
+
+            // Process each selected file
             selectedFiles.forEach((file, index) => {
                 const reader = new FileReader();
+
                 reader.onload = function(e) {
+                    // Create container div for the preview
                     const photoDiv = document.createElement('div');
                     photoDiv.className = 'photo-preview';
-                    photoDiv.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview ${index + 1}">
-                        <button type="button" class="remove-btn" onclick="removePhoto(${index})">
-                            <i class="fas fa-times text-xs"></i>
-                        </button>
-                    `;
+
+                    // Create the image element
+                    const img = document.createElement('img');
+                    img.src = e.target.result; // Set image source to data URL
+                    img.alt = `Preview ${index + 1}`;
+
+                    // Create the remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-btn';
+                    // --- FIX 2: Use direct assignment for onclick, passing the index ---
+                    removeBtn.onclick = function() {
+                        removePhoto(index); // Call remove function with correct index
+                    };
+
+                    // --- FIX 3: Create remove icon using text (more robust) ---
+                    const icon = document.createElement('span');
+                    icon.innerHTML = '&times;'; // HTML entity for multiplication sign (×)
+                    // Optional styling for the icon
+                    // icon.style.fontSize = '16px';
+                    // icon.style.fontWeight = 'bold';
+
+                    // Assemble the elements
+                    removeBtn.appendChild(icon);
+                    photoDiv.appendChild(img);
+                    photoDiv.appendChild(removeBtn);
+
+                    // Add the preview to the container
+                    alert("dddd");
                     preview.appendChild(photoDiv);
+                    
                 };
+
+                reader.onerror = function() {
+                    console.error(`Error reading file: ${file.name}`);
+                };
+
+                // Start reading the file as a Data URL
                 reader.readAsDataURL(file);
             });
 
-            // Update file input
+            // --- FIX 4: Ensure file input is updated AFTER previews are handled ---
+            // Update the hidden file input to match the selectedFiles array
             updateFileInput();
         }
 
+
+        /**
+         * Removes a photo from the selectedFiles array and updates previews.
+         * @param {number} index - The index of the file to remove in selectedFiles.
+         */
         function removePhoto(index) {
-            selectedFiles.splice(index, 1);
-            displayPhotoPreview();
+            // Remove the file from the array at the specified index
+            if (index >= 0 && index < selectedFiles.length) {
+                selectedFiles.splice(index, 1);
+                // Update the preview display (this recreates elements with correct indices)
+                displayPhotoPreview();
+                // Update the file input to reflect the changes
+                updateFileInput();
+            } else {
+                console.warn(`Attempted to remove photo at invalid index: ${index}`);
+            }
         }
 
+        /**
+         * Updates the hidden file input element to match the current selectedFiles array.
+         * This is crucial for form submission to include the correct files.
+         */
         function updateFileInput() {
             const input = document.getElementById('photoFiles');
-            const dt = new DataTransfer();
-            selectedFiles.forEach(file => dt.items.add(file));
+            const dt = new DataTransfer(); // Create a new DataTransfer object
+            // Add each selected file to the DataTransfer object
+            selectedFiles.forEach(file => {
+                dt.items.add(file);
+            });
+            // Assign the files from DataTransfer to the input
             input.files = dt.files;
         }
 
-        // Drag and drop functionality
+        // --- Drag and Drop Functionality ---
         const uploadArea = document.getElementById('photoUploadArea');
 
         uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#6366f1';
-            uploadArea.style.backgroundColor = '#f8fafc';
+            e.preventDefault(); // Prevent default browser behavior
+            uploadArea.style.borderColor = '#6366f1'; // Change border on drag over
+            uploadArea.style.backgroundColor = '#f8fafc'; // Change background
         });
 
         uploadArea.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            uploadArea.style.borderColor = '#d1d5db';
-            uploadArea.style.backgroundColor = '';
+            uploadArea.style.borderColor = '#d1d5db'; // Revert border
+            uploadArea.style.backgroundColor = ''; // Revert background
         });
 
         uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#d1d5db';
-            uploadArea.style.backgroundColor = '';
+            e.preventDefault(); // Prevent default browser behavior (opening file)
+            uploadArea.style.borderColor = '#d1d5db'; // Revert border
+            uploadArea.style.backgroundColor = ''; // Revert background
 
+            // Get files from the drop event and filter for images
             const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-            selectedFiles = [...selectedFiles, ...files].slice(0, 10);
+            if (files.length === 0) {
+                 alert("Please drop image files only.");
+                 return;
+            }
+
+            // Limit to 10 photos
+            const totalFiles = selectedFiles.length + files.length;
+            if (totalFiles > 10) {
+                alert(`Adding these files would exceed the 10-photo limit. Please remove some files or add fewer.`);
+                // Add only enough files to reach the limit
+                const slotsAvailable = 10 - selectedFiles.length;
+                selectedFiles.push(...files.slice(0, slotsAvailable));
+            } else {
+                selectedFiles.push(...files);
+            }
+
+            // Update previews and file input
             displayPhotoPreview();
+            // Note: updateFileInput is called inside displayPhotoPreview
+        });
+
+        // Optional: Click on upload area to trigger file selection
+        uploadArea.addEventListener('click', (e) => {
+            // Check if the click target is the area itself or specific child elements
+            // This prevents clicks on buttons/inputs inside from re-triggering file dialog
+            if (e.target === uploadArea || e.target.tagName === 'P' || e.target.tagName === 'I') {
+                document.getElementById('photoFiles').click();
+            }
         });
     </script>
 </body>

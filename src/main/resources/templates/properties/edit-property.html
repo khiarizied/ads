@@ -16,16 +16,16 @@
             background-color: #f8fafc;
         }
         .photo-preview {
-            display: inline-block;
-            margin: 0.5rem;
             position: relative;
-        }
-        .photo-preview img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
+            overflow: hidden;
             border-radius: 8px;
             border: 2px solid #e5e7eb;
+            aspect-ratio: 1 / 1;
+        }
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .photo-preview .remove-btn {
             position: absolute;
@@ -295,13 +295,13 @@
                                  th:alt="'Property photo ' + ${photo.id}"
                                  class="w-full h-32 object-cover rounded-lg border-2 border-gray-200">
                             <div th:if="${photo.mainPhoto}" class="main-photo-badge">Main</div>
-                            <form th:action="@{/properties/delete-photo/{photoId}(photoId=${photo.id})}" method="post" class="inline">
+                           <!--  <form th:action="@{/properties/delete-photo/{photoId}(photoId=${photo.id})}" method="post" class="inline">
                                 <button type="button" class="delete-btn" 
-                                        onclick="confirmDelete('Are you sure you want to delete this photo? This action cannot be undone.', () => this.closest('form').submit(), 'Delete Photo')"
+                                        onclick="confirmDeletePhoto(this)"
                                         title="Delete photo">
-                                    <i class="fas fa-times text-xs"></i>
+                                    <span style="font-size: 12px; font-weight: bold;">×</span>
                                 </button>
-                            </form>
+                            </form> -->
                         </div>
                     </div>
                 </div>
@@ -309,16 +309,18 @@
                 <!-- Add New Photos -->
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Add New Photos</h2>
-                    <div class="photo-upload-area">
+                    <div class="photo-upload-area" id="photoUploadArea">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600 mb-4">Click to upload photos or drag and drop</p>
                         <input type="file" id="photoFiles" name="photoFiles" accept="image/*" multiple
-                               onchange="previewMultiplePhotos(event)" class="hidden">
-                        <label for="photoFiles" class="cursor-pointer">
-                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
-                            <p class="text-gray-600 mb-2">Click to select multiple photos</p>
-                            <p class="text-gray-500 text-sm">JPG, PNG, or GIF (max 5MB each)</p>
-                        </label>
+                               class="hidden" onchange="previewMultiplePhotos(event)">
+                        <button type="button" onclick="document.getElementById('photoFiles').click()" 
+                                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                            <i class="fas fa-plus mr-2"></i>Select Photos
+                        </button>
+                        <p class="text-gray-500 text-sm mt-2">Maximum 10 photos. JPG, PNG, or GIF (max 5MB each)</p>
                     </div>
-                    <div id="newPhotoPreview" class="mt-4"></div>
+                    <div id="newPhotoPreview" class="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
                 </div>
 
                 <!-- Action Buttons -->
@@ -343,7 +345,9 @@
 
         function previewMultiplePhotos(event) {
             const files = Array.from(event.target.files);
-            newSelectedFiles = [...newSelectedFiles, ...files].slice(0, 10); // Limit to 10 new photos
+            // Filter for image files only
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            newSelectedFiles = [...newSelectedFiles, ...imageFiles].slice(0, 10); // Limit to 10 new photos
             displayNewPhotoPreview();
         }
 
@@ -351,19 +355,49 @@
             const preview = document.getElementById('newPhotoPreview');
             preview.innerHTML = '';
 
+            if (newSelectedFiles.length === 0) {
+                return;
+            }
+
+            // Process each file individually
             newSelectedFiles.forEach((file, index) => {
                 const reader = new FileReader();
+
                 reader.onload = function(e) {
+                    // Create photo container
                     const photoDiv = document.createElement('div');
                     photoDiv.className = 'photo-preview';
-                    photoDiv.innerHTML = `
-                        <img src="${e.target.result}" alt="New photo preview ${index + 1}">
-                        <button type="button" class="remove-btn" onclick="removeNewPhoto(${index})">
-                            <i class="fas fa-times text-xs"></i>
-                        </button>
-                    `;
+
+                    // Create image element
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = `New photo preview ${index + 1}`;
+
+                    // Create remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.onclick = function() {
+                        removeNewPhoto(index);
+                    };
+
+                    // Create close icon (using text since FontAwesome might not be available)
+                    const icon = document.createElement('span');
+                    icon.innerHTML = '×';
+                    icon.style.fontSize = '14px';
+                    icon.style.fontWeight = 'bold';
+
+                    // Assemble elements
+                    removeBtn.appendChild(icon);
+                    photoDiv.appendChild(img);
+                    photoDiv.appendChild(removeBtn);
                     preview.appendChild(photoDiv);
                 };
+
+                reader.onerror = function() {
+                    console.error(`Error reading file: ${file.name}`);
+                };
+
                 reader.readAsDataURL(file);
             });
 
@@ -372,23 +406,39 @@
         }
 
         function removeNewPhoto(index) {
+            // Remove the file from the array
             newSelectedFiles.splice(index, 1);
+
+            // Update the preview display
             displayNewPhotoPreview();
         }
 
         function updateNewFileInput() {
             const input = document.getElementById('photoFiles');
+            
+            // Create a new DataTransfer object to update the file input
             const dt = new DataTransfer();
-            newSelectedFiles.forEach(file => dt.items.add(file));
+            newSelectedFiles.forEach(file => {
+                dt.items.add(file);
+            });
+            
             input.files = dt.files;
         }
 
-        // Add drag and drop functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const uploadArea = document.querySelector('.photo-upload-area');
+        function confirmDeletePhoto(button) {
+            if (confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
+                button.closest('form').submit();
+            }
+        }
 
+        // Drag and drop functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('photoUploadArea');
+
+            // Prevent default drag behaviors
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
             });
 
             function preventDefaults(e) {
@@ -396,6 +446,7 @@
                 e.stopPropagation();
             }
 
+            // Highlight drop area when item is dragged over it
             ['dragenter', 'dragover'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, highlight, false);
             });
@@ -405,13 +456,16 @@
             });
 
             function highlight(e) {
-                uploadArea.classList.add('border-indigo-500', 'bg-indigo-50');
+                uploadArea.style.borderColor = '#6366f1';
+                uploadArea.style.backgroundColor = '#f8fafc';
             }
 
             function unhighlight(e) {
-                uploadArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+                uploadArea.style.borderColor = '#d1d5db';
+                uploadArea.style.backgroundColor = '';
             }
 
+            // Handle dropped files
             uploadArea.addEventListener('drop', handleDrop, false);
 
             function handleDrop(e) {
@@ -423,9 +477,25 @@
 
                 if (imageFiles.length > 0) {
                     newSelectedFiles = [...newSelectedFiles, ...imageFiles].slice(0, 10);
+                    
+                    // Update the file input to reflect dropped files
+                    const input = document.getElementById('photoFiles');
+                    const dataTransfer = new DataTransfer();
+                    newSelectedFiles.forEach(file => {
+                        dataTransfer.items.add(file);
+                    });
+                    input.files = dataTransfer.files;
+                    
                     displayNewPhotoPreview();
                 }
             }
+
+            // Click on upload area to trigger file selection
+            uploadArea.addEventListener('click', (e) => {
+                if (e.target === uploadArea || e.target.tagName === 'P' || e.target.tagName === 'I') {
+                    document.getElementById('photoFiles').click();
+                }
+            });
         });
     </script>
 </body>
