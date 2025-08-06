@@ -110,16 +110,16 @@ public class PropertyService {
     public void deletePhoto(Long photoId) {
         propertyPhotoRepository.deleteById(photoId);
     }
-    public boolean deletePhotoById(Long photoId) {
-		return propertyRepository.deleteByIdSafe(photoId);
-    	
-    	
-    	
-    }
+    
     public Optional<PropertyPhoto> findPhotoById(Long photoId) {
         return propertyPhotoRepository.findById(photoId);
     }
-
+    public boolean deletePhotoById(Long photoId) {
+		return propertyPhotoRepository.deleteByIdSafe(photoId);
+    	
+    	
+    	
+    }
     private Property convertToEntity(PropertyDto propertyDto) {
         Property property = new Property();
         property.setTitle(propertyDto.getTitle());

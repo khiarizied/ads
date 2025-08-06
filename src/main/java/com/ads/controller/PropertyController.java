@@ -2,6 +2,7 @@ package com.ads.controller;
 
 import com.ads.dto.PropertyDto;
 import com.ads.model.*;
+import com.ads.repository.PropertyPhotoRepository;
 import com.ads.service.PropertyService;
 import com.ads.service.UserService;
 import jakarta.validation.Valid;
@@ -33,7 +34,8 @@ public class PropertyController {
 
     @Autowired
     private PropertyService propertyService;
-
+    @Autowired
+    private PropertyPhotoRepository propertyPhotoRepository;
     @Autowired
     private UserService userService;
 

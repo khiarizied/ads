@@ -29,4 +29,15 @@ public interface PropertyPhotoRepository extends JpaRepository<PropertyPhoto, Lo
 
     @Query("SELECT p FROM PropertyPhoto p WHERE p.property.id = :propertyId ORDER BY p.displayOrder")
     List<PropertyPhoto> findByPropertyIdOrderByDisplayOrder(@Param("propertyId") Long propertyId);
+    
+    default boolean deleteByIdSafe(Long id) {
+        if (existsById(id)) {
+            deleteById(id); // from JpaRepository
+            return true;
+        }
+        return false;
+    }
+
+    // Optional: if you're using Spring Data JPA 2.5+, existsById is available
+    boolean existsById(Long id);
 }
