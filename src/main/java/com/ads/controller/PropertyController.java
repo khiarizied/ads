@@ -250,8 +250,8 @@ public class PropertyController {
     }
 
     // Delete photo
-    @PostMapping("/delete-photo/{photoId}")
-    public String deletePhoto(@PathVariable Long photoId, Authentication authentication) {
+    @PostMapping("/delete-photo3/{photoId}")
+    public String deletePhoto3(@PathVariable Long photoId, Authentication authentication) {
         Optional<PropertyPhoto> photo = propertyService.findPhotoById(photoId);
         if (photo.isPresent()) {
             User currentUser = userService.findByUsername(authentication.getName());
@@ -264,6 +264,47 @@ public class PropertyController {
             }
         }
         return "redirect:/properties/my-properties?error=unauthorized";
+    }
+    
+
+    @PostMapping("/delete-photo/{photoId}")
+    @ResponseBody // This is key - it tells Spring to write the return value directly to the response body
+    public ResponseEntity<String> deletePhoto(@PathVariable Long photoId, 
+                                              @RequestHeader(value = "HX-Request", required = false) String hxRequest) {
+        try {
+            // 1. Perform the deletion logic (check ownership, delete file, update DB)
+            boolean deleted = propertyService.deletePhotoById(photoId); // Implement this method in your service
+
+            if (deleted) {
+                // 2. If successful, return an empty string or a success snippet for HTMX to swap
+                // Returning an empty string "" with hx-swap="outerHTML" on the target will remove it.
+                // The @ResponseBody annotation ensures this string is written directly to the response body.
+                return ResponseEntity.ok(""); // 200 OK with empty body
+                // Alternative: return ResponseEntity.noContent().build(); // 204 No Content
+                // If using 204, HTMX might need specific configuration, but 200 with "" is simpler.
+            } else {
+                // 3. If photo wasn't found or couldn't be deleted
+                // Log the issue
+                // Return an error response or still return "" to prevent navigation but indicate failure on server
+                // For simplicity, let's still return "" but you might want to handle this differently
+                 // e.g., return a specific error message snippet if you want HTMX to display it
+                 // Or throw an exception that gets handled by a global exception handler
+                 System.out.println("Photo with ID " + photoId + " not found or could not be deleted.");
+                 // Returning NOT_FOUND might cause issues with HTMX swap, returning "" is safer for UX
+                 return ResponseEntity.ok(""); // Or consider returning a specific error code if needed
+                 // return ResponseEntity.notFound().build(); // Might prevent swap depending on HTMX config
+            }
+        } catch (Exception e) {
+            // 4. Handle unexpected errors
+            // Log the exception
+            e.printStackTrace(); // Use proper logging in production
+            // Decide how to respond. Returning an error code might prevent HTMX swap.
+            // Returning an empty string prevents navigation but doesn't inform user of server error directly via HTMX swap.
+            // Consider returning a specific error snippet or using HTMX events for global error handling.
+            return ResponseEntity.ok(""); // Prevents navigation, but error should be logged/handled elsewhere
+             // Or return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting photo");
+             // HTMX will swap "Error deleting photo" into the target element.
+        }
     }
 
     private PropertyDto convertToDto(Property property) {

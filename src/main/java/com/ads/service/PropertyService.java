@@ -110,7 +110,12 @@ public class PropertyService {
     public void deletePhoto(Long photoId) {
         propertyPhotoRepository.deleteById(photoId);
     }
-
+    public boolean deletePhotoById(Long photoId) {
+		return propertyRepository.deleteByIdSafe(photoId);
+    	
+    	
+    	
+    }
     public Optional<PropertyPhoto> findPhotoById(Long photoId) {
         return propertyPhotoRepository.findById(photoId);
     }

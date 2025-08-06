@@ -66,4 +66,16 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     @Query("SELECT DISTINCT p.city FROM Property p ORDER BY p.city")
     List<String> findAllCities();
+    
+    
+    default boolean deleteByIdSafe(Long id) {
+        if (existsById(id)) {
+            deleteById(id); // from JpaRepository
+            return true;
+        }
+        return false;
+    }
+
+    // Optional: if you're using Spring Data JPA 2.5+, existsById is available
+    boolean existsById(Long id);
 }
