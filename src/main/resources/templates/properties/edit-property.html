@@ -318,7 +318,21 @@
             class="delete-btn"
             title="Delete photo"
             th:attr="hx-post=@{/properties/delete-photo/{photoId}(photoId=${photo.id})}" 
-            hx-confirm="Are you sure you want to delete this photo? This action cannot be undone."
+            hx-trigger='confirmed'
+            onClick="Swal.fire({
+            	  title: 'Are you sure?',
+            	  text: 'to delete this photo',
+            	  icon: 'warning',
+            	  showCancelButton: true,
+            	  confirmButtonColor: '#3085d6',
+            	  cancelButtonColor: '#d33',
+            	  confirmButtonText: 'Yes, delete it!'
+            	  }).then((result) =>{
+            if(result.isConfirmed){
+              htmx.trigger(this, 'confirmed');  
+            } 
+        })"
+            
             hx-target="closest .existing-photo"
             hx-swap="outerHTML swap:1s"
             _="on htmx:after-request[detail.successful] log 'Photo deleted' then transition background-color to red">
@@ -451,9 +465,11 @@
         }
 
         function confirmDeletePhoto(button) {
-            if (confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
-                button.closest('form').submit();
-            }
+            confirmDelete(
+                'Are you sure you want to delete this photo? This action cannot be undone.',
+                () => button.closest('form').submit(),
+                'Delete Photo'
+            );
         }
 
         // Drag and drop functionality

@@ -35,5 +35,12 @@ public class AdminController {
         model.addAttribute("users", users);
         return "admin/users";
     }
+    
+    @GetMapping("/user")
+    public String user(Model model) {
+    	   model.addAttribute("user", new UserDto());
+           return "admin/register";
+      
+    }
 }
     
