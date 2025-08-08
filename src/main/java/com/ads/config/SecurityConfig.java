@@ -29,11 +29,12 @@ public class SecurityConfig {
         return authProvider;
     }
 
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/home", "/auth/**", "/css/**", "/js/**", "/photos/**", "/h2-console/**").permitAll()  // 👈 Fixed: use /** and full path
+                .requestMatchers("/", "/home", "/auth/**", "/css/**", "/js/**", "/photos/**", "/h2-console/**", "/search/form").permitAll()  // 👈 Fixed: use /** and full path
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
